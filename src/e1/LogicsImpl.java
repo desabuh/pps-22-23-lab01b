@@ -1,6 +1,7 @@
 package e1;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 public class LogicsImpl implements Logics {
 	
@@ -8,21 +9,28 @@ public class LogicsImpl implements Logics {
 	private Pair<Integer,Integer> knight;
 	private final Random random = new Random();
 	private final int size;
+
+
+	private Movement<Pair<Integer, Integer>> movement;
+
 	 
     public LogicsImpl(int size){
-    	this.size = size;
-        this.pawn = this.randomEmptyPosition();
-        this.knight = this.randomEmptyPosition();	
+		this(size, () -> Stream.generate(() -> new Pair<>(new Random().nextInt(size), new Random().nextInt(size)) ).iterator());
     }
-    
-	private final Pair<Integer,Integer> randomEmptyPosition(){
-    	Pair<Integer,Integer> pos = new Pair<>(this.random.nextInt(size),this.random.nextInt(size));
-    	// the recursive call below prevents clash with an existing pawn
-    	return this.pawn!=null && this.pawn.equals(pos) ? randomEmptyPosition() : pos;
-    }
-    
+
+	public LogicsImpl(final int size, PositionsGenerationStrategy<Pair<Integer,Integer>> strategy) {
+		this(size, strategy.getPositionIterator().next(), strategy.getPositionIterator().next());
+	}
+
+	public LogicsImpl(final int size, final Pair<Integer,Integer> knightPosition,final Pair<Integer, Integer> pawnPosition) {
+		this.size = size;
+		this.knight = knightPosition;
+		this.pawn = pawnPosition;
+	}
+
 	@Override
 	public boolean hit(int row, int col) {
+
 		if (row<0 || col<0 || row >= this.size || col >= this.size) {
 			throw new IndexOutOfBoundsException();
 		}
@@ -34,6 +42,16 @@ public class LogicsImpl implements Logics {
 			return this.pawn.equals(this.knight);
 		}
 		return false;
+
+		/*
+		Optional<Pair<Integer,Integer>> destination = this.movement.move(new Pair<>(row, col));
+		if(destination.isPresent()) {
+			this.knight = destination.get();
+		}
+		return destination.isPresent();
+
+		 */
+
 	}
 
 	@Override
@@ -45,4 +63,5 @@ public class LogicsImpl implements Logics {
 	public boolean hasPawn(int row, int col) {
 		return this.pawn.equals(new Pair<>(row,col));
 	}
+
 }
